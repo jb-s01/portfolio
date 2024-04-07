@@ -1,16 +1,33 @@
 import dash
+from flask import Flask
 from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 import pandas as pd
 
+# Initialize Flask Server
+server = Flask(__name__)
+
+# Define Dash apps with Flask as the server
+app1 = dash.Dash(__name__, server=server, routes_pathname_prefix='/app1/', external_stylesheets=[dbc.themes.LUX])
+app2 = dash.Dash(__name__, server=server, routes_pathname_prefix='/app2/')
+
 # Data Assets
 df_resume = pd.read_csv(r'/Users/jbslaunwhite01/projects/portfolio/resume.csv')
 
-# External stylesheets (e.g., Bootstrap)
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+# Define the Navigation bar
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Portfolio", href="/app1/")),
+        dbc.NavItem(dbc.NavLink("Project 1", href="/app2/")),
+    ],
+    brand="Main Dashboard",
+    brand_href="/",
+    color="primary",
+    dark=True,
+)
 
-# Define the layout of the app
-app.layout = html.Div([
+# Define the layout of app1
+app1.layout = html.Div([navbar,
     html.H1(children='Jonas Slaunwhite', style={'textAlign':'center'}),
     html.P(children='Professional Portfolio', style={'textAlign':'center'}),
     # Add a container to hold the content of the entire single-page report
@@ -40,7 +57,7 @@ app.layout = html.Div([
             
         ]),
         html.Hr(),
-        html.Section(id='projects', children=[
+        html.Section(id='education', children=[
             html.H1("Education"),
             html.P(children="Saint Mary's University - Bachelor of Commerce, Accounting (2012)"),
             
@@ -60,5 +77,24 @@ app.layout = html.Div([
     ], fluid=True)
 ])
 
+# Define the layout of app2
+app2.layout = html.Div([navbar,
+    html.H1('App 2'),
+    html.P('This is the second Dash app.')
+])
+
+# Define the default route for the main dashboard or landing page
+@server.route('/')
+def render_dashboard():
+    # You can return a simple string or an HTML page with links to your Dash apps
+    return '''
+    <h1>Main Dashboard</h1>
+    <p>Welcome to the main dashboard. Use the navigation bar to visit the apps:</p>
+    <ul>
+        <li><a href="/app1/">Portfolio</a></li>
+        <li><a href="/app2/">Project 1</a></li>
+    </ul>
+    '''
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    server.run(debug=True)
